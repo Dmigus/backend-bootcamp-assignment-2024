@@ -1,0 +1,9 @@
+cmd/
+bin/
+/vendor
+.DS_STORE
+.DS_Store
+/.idea
+/.vscode
+coverage.html
+coverage.out
