@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "../internal/providers/postgres/houses/queries.sql"
+    schema: "../migrations"
+    gen:
+      go:
+        package: "orders"
+        sql_package: "pgx/v5"
+        out: "../internal/providers/postgres/houses"

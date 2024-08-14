@@ -10,9 +10,14 @@ bin/oapi-codegen:
 gen-http-endpoints: bin/oapi-codegen
 	#$(LOCAL_BIN)/oapi-codegen -generate "types,std-http" -o ./internal/controllers/gen.go -package controllers ./api/openapiv3/api.yaml
 	$(LOCAL_BIN)/oapi-codegen -generate "types,std-http" -include-tags "noAuth" -o ./internal/controllers/auth/gen.go -package auth ./api/openapiv3/api.yaml
-#	$(LOCAL_BIN)/oapi-codegen -generate "types,std-http" -include-tags "authOnly" -o ./internal/controllers/gen/authonly.go -package gen ./api/openapiv3/api.yaml
-#	$(LOCAL_BIN)/oapi-codegen -generate "types,std-http" -include-tags "moderationsOnly" -o ./internal/controllers/gen/moderationsonly.go -package gen ./api/openapiv3/api.yaml
+	$(LOCAL_BIN)/oapi-codegen -generate "types,std-http" -include-tags "authOnly,moderationsOnly" -o ./internal/controllers/renting/gen.go -package renting ./api/openapiv3/api.yaml
 
+bin/sqlc:
+	GOBIN=$(LOCAL_BIN) go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.27.0
+
+.PHONY: sqlc
+sqlc: bin/sqlc
+	$(LOCAL_BIN)/sqlc generate --file=./sqlc/sqlc.yaml
 
 .PHONY: lint
 lint:

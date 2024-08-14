@@ -2,6 +2,7 @@ package renting
 
 import (
 	authController "backend-bootcamp-assignment-2024/internal/controllers/auth"
+	"backend-bootcamp-assignment-2024/internal/controllers/mw"
 	"backend-bootcamp-assignment-2024/internal/services/auth"
 	"context"
 	"fmt"
@@ -15,7 +16,7 @@ var Module = fx.Module("renting",
 			authService,
 			fx.As(new(authController.Service)),
 		),
-		httpHandler,
+		authHandler,
 		httpServer,
 	),
 	fx.Invoke(func(*http.Server) {}),
@@ -26,7 +27,7 @@ func authService(config *Config) *auth.AuthService {
 	return auth.NewAuthService(key)
 }
 
-func httpHandler(service authController.Service) http.Handler {
+func authHandler(service authController.Service) http.Handler {
 	serverHandler := authController.NewServerHandler(service)
 	return authController.Handler(serverHandler)
 }
@@ -34,7 +35,7 @@ func httpHandler(service authController.Service) http.Handler {
 func httpServer(lc fx.Lifecycle, config *Config, handler http.Handler) *http.Server {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", config.HTTPPort),
-		Handler: handler,
+		Handler: mw.Recovery(handler),
 	}
 	lc.Append(fx.StartStopHook(
 		func() {
