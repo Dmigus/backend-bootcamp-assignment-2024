@@ -32,7 +32,7 @@ func (s *ServerHandler) GetDummyLogin(w http.ResponseWriter, _ *http.Request, pa
 	}
 	token, err := s.service.DummyLogin(userType)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		write5xxResponse(w, err.Error())
 		return
 	}
 	structured := struct {
@@ -40,7 +40,7 @@ func (s *ServerHandler) GetDummyLogin(w http.ResponseWriter, _ *http.Request, pa
 	}{token}
 	serialized, err := json.Marshal(structured)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		write5xxResponse(w, err.Error())
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")
@@ -55,4 +55,16 @@ func (s *ServerHandler) PostLogin(w http.ResponseWriter, r *http.Request) {
 func (s *ServerHandler) PostRegister(w http.ResponseWriter, r *http.Request) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func write5xxResponse(w http.ResponseWriter, message string) {
+	respCode := http.StatusInternalServerError
+	body := N5xx{
+		Code:    &respCode,
+		Message: message,
+	}
+	jsonBody, _ := json.Marshal(body)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	_, _ = w.Write(jsonBody)
 }

@@ -1,4 +1,4 @@
-package orders
+package houses
 
 import (
 	"backend-bootcamp-assignment-2024/internal/providers/postgres"
@@ -21,6 +21,7 @@ func NewHouses(tx DBTX) *Houses {
 }
 
 func (h *Houses) Create(ctx context.Context, req house.HouseCreateRequest) (*house.HouseCreateResponse, error) {
+	// TODO: разобраться с null значениями
 	params := createHouseParams{Address: req.Address, Year: int32(req.Year), Developer: pgtype.Text{String: req.Developer}}
 	queries := New(h.getDBTX(ctx))
 	newHouse, err := queries.createHouse(ctx, params)

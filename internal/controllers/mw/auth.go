@@ -7,24 +7,24 @@ import (
 )
 
 type (
-	roleRecognizer interface {
+	RoleRecognizer interface {
 		GetRole(tokenStr string) (auth.UserType, error)
 	}
 	AuthenticatedMiddleware struct {
-		roleRecognizer roleRecognizer
+		roleRecognizer RoleRecognizer
 		next           http.Handler
 	}
 	ModeratorOnlyMiddleware struct {
-		roleRecognizer roleRecognizer
+		roleRecognizer RoleRecognizer
 		next           http.Handler
 	}
 )
 
-func NewModeratorOnlyMiddleware(roleRecognizer roleRecognizer, next http.Handler) *ModeratorOnlyMiddleware {
+func NewModeratorOnlyMiddleware(roleRecognizer RoleRecognizer, next http.Handler) *ModeratorOnlyMiddleware {
 	return &ModeratorOnlyMiddleware{roleRecognizer: roleRecognizer, next: next}
 }
 
-func NewAuthenticatedMiddleware(roleRecognizer roleRecognizer, next http.Handler) *AuthenticatedMiddleware {
+func NewAuthenticatedMiddleware(roleRecognizer RoleRecognizer, next http.Handler) *AuthenticatedMiddleware {
 	return &AuthenticatedMiddleware{roleRecognizer, next}
 }
 
@@ -61,7 +61,7 @@ func getTokenFromR(r *http.Request) (string, bool) {
 	if authHeader == "" {
 		return "", false
 	}
-	token, _ := strings.CutPrefix(authHeader, "Bearer")
+	token, _ := strings.CutPrefix(authHeader, "Bearer ")
 	return token, true
 }
 
