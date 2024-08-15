@@ -2,8 +2,11 @@ package house
 
 import (
 	"context"
+	"errors"
 	"time"
 )
+
+var ErrHouseNotFound = errors.New("house not found")
 
 type (
 	HouseCreateRequest struct {
