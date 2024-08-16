@@ -1,4 +1,4 @@
-package flat
+package models
 
 type FlatStatus int
 
@@ -8,3 +8,6 @@ const (
 	Approved
 	Declined
 )
+
+type Flat struct {
+}

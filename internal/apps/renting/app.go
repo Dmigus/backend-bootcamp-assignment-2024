@@ -4,9 +4,12 @@ import (
 	authController "backend-bootcamp-assignment-2024/internal/controllers/auth"
 	"backend-bootcamp-assignment-2024/internal/controllers/mw"
 	rentingController "backend-bootcamp-assignment-2024/internal/controllers/renting"
-	"backend-bootcamp-assignment-2024/internal/providers/postgres/houses"
+	"backend-bootcamp-assignment-2024/internal/controllers/renting/getflats"
+	"backend-bootcamp-assignment-2024/internal/controllers/renting/housecreate"
+	"backend-bootcamp-assignment-2024/internal/providers/postgres/renting"
 	"backend-bootcamp-assignment-2024/internal/services/auth"
-	"backend-bootcamp-assignment-2024/internal/services/renting/house"
+	getflats2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/getflats"
+	housecreate2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,16 +25,21 @@ var Module = fx.Module("renting",
 			fx.As(new(mw.RoleRecognizer)),
 		),
 		fx.Annotate(
-			house.NewHouseService,
-			fx.As(new(rentingController.HouseService)),
+			housecreate2.NewHouseService,
+			fx.As(new(housecreate.HouseService)),
 		),
 		fx.Annotate(
-			houses.NewHouses,
-			fx.As(new(house.Repository)),
+			getflats2.NewGetFlatsService,
+			fx.As(new(getflats.FlatsService)),
+		),
+		fx.Annotate(
+			renting.NewRenting,
+			fx.As(new(housecreate2.Repository)),
+			fx.As(new(getflats2.Repository)),
 		),
 		fx.Annotate(
 			createConnToPostgres,
-			fx.As(new(houses.DBTX)),
+			fx.As(new(renting.DBTX)),
 		),
 		fx.Annotate(
 			authHandler,
@@ -41,6 +49,8 @@ var Module = fx.Module("renting",
 			rentingHandler,
 			fx.ResultTags(`name:"rentingHandler"`),
 		),
+		getflats.NewHandler,
+		housecreate.NewHandler,
 		generalMux,
 		httpServer,
 	),
@@ -72,8 +82,14 @@ func authHandler(service authController.Service) http.Handler {
 	return authController.Handler(serverHandler)
 }
 
-func rentingHandler(service rentingController.HouseService) http.Handler {
-	serverHandler := rentingController.NewServerHandler(service)
+type rentingHandlerParams struct {
+	fx.In
+	GetFlatsHandler    *getflats.Handler
+	HouseCreateHandler *housecreate.Handler
+}
+
+func rentingHandler(handlers rentingHandlerParams) http.Handler {
+	serverHandler := rentingController.NewServerHandler(handlers.HouseCreateHandler, handlers.GetFlatsHandler)
 	return rentingController.Handler(serverHandler)
 }
 
@@ -89,7 +105,8 @@ func generalMux(params generalMuxParams) http.Handler {
 	mux.Handle("GET /dummyLogin", params.AuthHandler)
 	mux.Handle("POST /login", params.AuthHandler)
 	mux.Handle("POST /register", params.AuthHandler)
-	mux.Handle("POST /house/", mw.NewModeratorOnlyMiddleware(params.RoleRecognizer, params.RentingHandler))
+	mux.Handle("POST /house/create", mw.NewModeratorOnlyMiddleware(params.RoleRecognizer, params.RentingHandler))
+	mux.Handle("GET /house/{id}", mw.NewAuthenticatedMiddleware(params.RoleRecognizer, params.RentingHandler))
 	return mw.Recovery(mux)
 }
 

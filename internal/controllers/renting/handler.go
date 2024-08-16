@@ -1,20 +1,21 @@
 package renting
 
 import (
-	"backend-bootcamp-assignment-2024/internal/services/renting/house"
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 )
 
 type (
-	HouseService interface {
-		CreateHouse(ctx context.Context, req house.HouseCreateRequest) (*house.HouseCreateResponse, error)
-		GetHouseByID(ctx context.Context, id int) (*house.HouseCreateResponse, error)
+	houseCreateHandler interface {
+		PostHouseCreate(w http.ResponseWriter, r *http.Request)
+	}
+	getFlatsHandler interface {
+		GetHouseId(w http.ResponseWriter, r *http.Request, id HouseId)
 	}
 	ServerHandler struct {
-		houseService HouseService
+		houseCreateHandler houseCreateHandler
+		getFlatsHandler    getFlatsHandler
 	}
 )
 
@@ -29,37 +30,11 @@ func (s *ServerHandler) PostFlatUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ServerHandler) PostHouseCreate(w http.ResponseWriter, r *http.Request) {
-	var req PostHouseCreateJSONBody
-	err := readJsonBody(r, &req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-	serviceReq := house.HouseCreateRequest{Address: req.Address, Year: req.Year, Developer: *req.Developer}
-	serviceResp, err := s.houseService.CreateHouse(r.Context(), serviceReq)
-	if err != nil {
-		write5xxResponse(w, err.Error())
-		return
-	}
-	resp := House{
-		Address:   serviceResp.Address,
-		Year:      serviceResp.Year,
-		Developer: &serviceResp.Developer,
-		Id:        serviceResp.Id,
-		CreatedAt: &serviceResp.CreatedAt,
-		UpdateAt:  &serviceResp.UpdateAt,
-	}
-	serialized, err := json.Marshal(resp)
-	if err != nil {
-		write5xxResponse(w, err.Error())
-		return
-	}
-	w.Header().Add("Content-Type", "application/json")
-	_, _ = w.Write(serialized)
+	s.houseCreateHandler.PostHouseCreate(w, r)
 }
 
 func (s *ServerHandler) GetHouseId(w http.ResponseWriter, r *http.Request, id HouseId) {
-	//TODO implement me
-	panic("implement me")
+	s.getFlatsHandler.GetHouseId(w, r, id)
 }
 
 func (s *ServerHandler) PostHouseIdSubscribe(w http.ResponseWriter, r *http.Request, id HouseId) {
@@ -67,11 +42,17 @@ func (s *ServerHandler) PostHouseIdSubscribe(w http.ResponseWriter, r *http.Requ
 	panic("implement me")
 }
 
-func NewServerHandler(houseService HouseService) *ServerHandler {
-	return &ServerHandler{houseService: houseService}
+func NewServerHandler(
+	houseCreateHandler houseCreateHandler,
+	getFlatsHandler getFlatsHandler,
+) *ServerHandler {
+	return &ServerHandler{
+		houseCreateHandler: houseCreateHandler,
+		getFlatsHandler:    getFlatsHandler,
+	}
 }
 
-func readJsonBody(r *http.Request, dst any) error {
+func ReadJsonBody(r *http.Request, dst any) error {
 	bodyData, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
@@ -79,7 +60,7 @@ func readJsonBody(r *http.Request, dst any) error {
 	return json.Unmarshal(bodyData, dst)
 }
 
-func write5xxResponse(w http.ResponseWriter, message string) {
+func Write5xxResponse(w http.ResponseWriter, message string) {
 	respCode := http.StatusInternalServerError
 	body := N5xx{
 		Code:    &respCode,
