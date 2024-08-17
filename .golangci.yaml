@@ -33,6 +33,9 @@ linters-settings:
     min-complexity: 10
   gocyclo:
     min-complexity: 10
+  gosec:
+    excludes:
+      - G112
 
 linters:
   disable-all: true
@@ -48,6 +51,8 @@ linters:
     - megacheck
     - typecheck
     - unused
+
+
 
 issues:
   exclude-use-default: false

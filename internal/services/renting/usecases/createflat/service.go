@@ -36,10 +36,7 @@ func (f *Service) CreateFlat(ctx context.Context, flat Request) (*models.Flat, e
 	var serviceErr error
 	txErr := f.txManager.WithinTransaction(ctx, func(txCtx context.Context) bool {
 		createdFlat, serviceErr = f.createFlatAndUpdateHouse(txCtx, flat)
-		if serviceErr != nil {
-			return false
-		}
-		return true
+		return serviceErr == nil
 	})
 	if serviceErr != nil {
 		return nil, serviceErr

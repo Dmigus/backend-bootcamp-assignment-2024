@@ -6,8 +6,9 @@ import (
 	"backend-bootcamp-assignment-2024/internal/models"
 	"context"
 	"encoding/json"
-	"github.com/samber/lo"
 	"net/http"
+
+	"github.com/samber/lo"
 )
 
 type (

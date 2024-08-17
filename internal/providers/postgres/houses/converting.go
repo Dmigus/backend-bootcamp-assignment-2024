@@ -3,6 +3,7 @@ package houses
 import (
 	"backend-bootcamp-assignment-2024/internal/models"
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

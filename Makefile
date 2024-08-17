@@ -5,6 +5,10 @@ run-storage: bin/goose
 	docker-compose up -d --wait postgres
 	@$(LOCAL_BIN)/goose -dir ./migrations postgres "host=localhost port=$(STORAGE_PORT) user=$(STORAGE_USER) password=$(STORAGE_PASSWORD) dbname=$(STORAGE_DATABASE) sslmode=disable" up
 
+.PHONY: run-all
+run-all: run-storage
+	docker-compose up -d --wait renting
+
 stop-all:
 	docker-compose down
 

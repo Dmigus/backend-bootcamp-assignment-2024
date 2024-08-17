@@ -6,6 +6,7 @@ import (
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -35,7 +36,11 @@ func (h *Handler) PostFlatCreate(w http.ResponseWriter, r *http.Request) {
 	serviceReq := createflat.Request{HouseId: req.HouseId, Price: req.Price, Rooms: *req.Rooms}
 	serviceResp, err := h.service.CreateFlat(r.Context(), serviceReq)
 	if err != nil {
-		renting.Write5xxResponse(w, err.Error())
+		if errors.Is(err, models.ErrHouseNotFound) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			renting.Write5xxResponse(w, err.Error())
+		}
 		return
 	}
 	dto := renting.FlatModelToDto(serviceResp)

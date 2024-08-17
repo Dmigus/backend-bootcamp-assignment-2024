@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -27,7 +28,9 @@ func (tm *TxManger) WithinTransaction(ctx context.Context, f func(context.Contex
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 	txCtx := context.WithValue(ctx, key, tx)
 	if f(txCtx) {
 		return tx.Commit(ctx)

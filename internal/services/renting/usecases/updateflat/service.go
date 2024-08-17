@@ -31,10 +31,7 @@ func (s *Service) UpdateStatus(ctx context.Context, id int, newStatus models.Fla
 	var updatedFlat *models.Flat
 	txErr := s.txm.WithinTransaction(ctx, func(txCtx context.Context) bool {
 		updatedFlat, serviceErr = s.performStatusChange(txCtx, id, newStatus)
-		if serviceErr != nil {
-			return false
-		}
-		return true
+		return serviceErr == nil
 	})
 	if serviceErr != nil {
 		return nil, serviceErr

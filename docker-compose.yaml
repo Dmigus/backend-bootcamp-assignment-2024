@@ -1,11 +1,21 @@
 version: "2.27.0"
 services:
-
+  renting:
+    build: .
+    ports:
+      - "${HTTP_PORT?err}:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: "host=postgres user=${STORAGE_USER?err} password=${STORAGE_PASSWORD?err} dbname=${STORAGE_DATABASE?err} port=${STORAGE_PORT?err} sslmode=disable"
+      CIPHER_KEY: ${CIPHER_KEY?err}
+      HTTP_PORT: ${HTTP_PORT?err}
 
   postgres:
     image: postgres:16.2-bullseye
     ports:
-      - "5432:5432"
+      - "${STORAGE_PORT?err}:5432"
     user: postgres
     environment:
       POSTGRES_USER: ${STORAGE_USER?err}

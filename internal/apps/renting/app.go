@@ -1,3 +1,5 @@
+// Package renting содержит backend-сервис, который обрабатывает запросы всех пользователей
+
 package renting
 
 import (
@@ -18,9 +20,11 @@ import (
 	updateflat2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/updateflat"
 	"context"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/fx"
-	"net/http"
 )
 
 var Module = fx.Module("renting",
@@ -160,8 +164,9 @@ func generalMux(params generalMuxParams) http.Handler {
 
 func httpServer(lc fx.Lifecycle, config *Config, handler http.Handler) *http.Server {
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", config.HTTPPort),
-		Handler: handler,
+		Addr:              fmt.Sprintf(":%d", config.HTTPPort),
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second, // Установим
 	}
 	lc.Append(fx.StartStopHook(
 		func() {

@@ -6,6 +6,7 @@ import (
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5"
 )
 

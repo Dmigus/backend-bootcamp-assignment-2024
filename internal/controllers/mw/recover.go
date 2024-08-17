@@ -25,11 +25,11 @@ func Recovery(next http.Handler) http.Handler {
 
 func recoverToRespBody(err any) auth.N5xx {
 	var responseMessage string
-	switch err.(type) {
+	switch e := err.(type) {
 	case error:
-		responseMessage = err.(error).Error()
+		responseMessage = e.Error()
 	case string:
-		responseMessage = err.(string)
+		responseMessage = e
 	default:
 		responseMessage = unknownError
 	}
