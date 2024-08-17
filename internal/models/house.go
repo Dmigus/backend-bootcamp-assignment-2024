@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var ErrHouseNotFound = errors.New("house not found")
+var ErrHouseNotFound = errors.New("house is not found")
 
 type House struct {
 	Id        int

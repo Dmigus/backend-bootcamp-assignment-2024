@@ -1,6 +1,7 @@
 package renting
 
 import (
+	"backend-bootcamp-assignment-2024/internal/models"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -16,10 +17,15 @@ type (
 	createFlatHandler interface {
 		PostFlatCreate(w http.ResponseWriter, r *http.Request)
 	}
+	updateFlatHandler interface {
+		PostFlatUpdate(w http.ResponseWriter, r *http.Request)
+	}
+	// ServerHandler это контейнер, в который положим все нужные хэндлеры, чтобы соответствовать сгенерированному ServerInterface
 	ServerHandler struct {
 		houseCreateHandler houseCreateHandler
 		getFlatsHandler    getFlatsHandler
 		createFlatHandler  createFlatHandler
+		updateFlatHandler  updateFlatHandler
 	}
 )
 
@@ -28,8 +34,7 @@ func (s *ServerHandler) PostFlatCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ServerHandler) PostFlatUpdate(w http.ResponseWriter, r *http.Request) {
-	//TODO implement me
-	panic("implement me")
+	s.updateFlatHandler.PostFlatUpdate(w, r)
 }
 
 func (s *ServerHandler) PostHouseCreate(w http.ResponseWriter, r *http.Request) {
@@ -49,11 +54,13 @@ func NewServerHandler(
 	houseCreateHandler houseCreateHandler,
 	getFlatsHandler getFlatsHandler,
 	createFlatHandler createFlatHandler,
+	updateFlatHandler updateFlatHandler,
 ) *ServerHandler {
 	return &ServerHandler{
 		houseCreateHandler: houseCreateHandler,
 		getFlatsHandler:    getFlatsHandler,
 		createFlatHandler:  createFlatHandler,
+		updateFlatHandler:  updateFlatHandler,
 	}
 }
 
@@ -75,4 +82,28 @@ func Write5xxResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusInternalServerError)
 	_, _ = w.Write(jsonBody)
+}
+
+func FlatModelToDto(resp *models.Flat) Flat {
+	return Flat{
+		Id:      resp.Id,
+		HouseId: resp.HouseId,
+		Price:   resp.Price,
+		Rooms:   resp.Rooms,
+		Status:  statusModelToDto(resp.Status),
+	}
+}
+
+func statusModelToDto(status models.FlatStatus) Status {
+	switch status {
+	case models.Created:
+		return Created
+	case models.OnModerate:
+		return OnModeration
+	case models.Approved:
+		return Approved
+	case models.Declined:
+		return Declined
+	}
+	return ""
 }

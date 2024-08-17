@@ -18,3 +18,14 @@ WHERE house_id = $1;
 SELECT id, house_id, price, rooms, status
 FROM flat
 WHERE house_id = $1 AND status = 'Approved';
+
+-- name: getFlatForUpdate :one
+SELECT id, house_id, price, rooms, status
+FROM flat
+WHERE id = $1 FOR UPDATE;
+
+-- name: updateStatus :one
+UPDATE flat
+SET status = $2
+WHERE id = $1
+RETURNING id, house_id, price, rooms, status;

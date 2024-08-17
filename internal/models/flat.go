@@ -1,6 +1,10 @@
 package models
 
+import "errors"
+
 type FlatStatus int
+
+var ErrFlatNotFound = errors.New("flat is not found")
 
 const (
 	Created FlatStatus = iota + 1

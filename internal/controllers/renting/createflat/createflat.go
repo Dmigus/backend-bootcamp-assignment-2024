@@ -29,7 +29,7 @@ func (h *Handler) PostFlatCreate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	if req.Rooms == nil {
-		http.Error(w, "Rooms is required", http.StatusBadRequest)
+		http.Error(w, "rooms is required", http.StatusBadRequest)
 		return
 	}
 	serviceReq := createflat.Request{HouseId: req.HouseId, Price: req.Price, Rooms: *req.Rooms}
@@ -38,7 +38,8 @@ func (h *Handler) PostFlatCreate(w http.ResponseWriter, r *http.Request) {
 		renting.Write5xxResponse(w, err.Error())
 		return
 	}
-	serialized, err := serializeFlatCreateResp(serviceResp)
+	dto := renting.FlatModelToDto(serviceResp)
+	serialized, err := json.Marshal(dto)
 	if err != nil {
 		renting.Write5xxResponse(w, err.Error())
 		return
@@ -46,15 +47,4 @@ func (h *Handler) PostFlatCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	_, _ = w.Write(serialized)
 
-}
-
-func serializeFlatCreateResp(resp *models.Flat) ([]byte, error) {
-	dto := renting.Flat{
-		Id:      resp.Id,
-		HouseId: resp.HouseId,
-		Price:   resp.Price,
-		Rooms:   resp.Rooms,
-		Status:  renting.Status(resp.Status.String()),
-	}
-	return json.Marshal(dto)
 }

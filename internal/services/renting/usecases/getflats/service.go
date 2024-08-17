@@ -10,16 +10,16 @@ type (
 		GetFlats(context.Context, int) ([]models.Flat, error)
 		GetApprovedFlats(context.Context, int) ([]models.Flat, error)
 	}
-	GetFlatsService struct {
+	Service struct {
 		repo Repository
 	}
 )
 
-func NewGetFlatsService(repo Repository) *GetFlatsService {
-	return &GetFlatsService{repo: repo}
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
 }
 
-func (s *GetFlatsService) GetFlats(ctx context.Context, id int, role models.UserRole) ([]models.Flat, error) {
+func (s *Service) GetFlats(ctx context.Context, id int, role models.UserRole) ([]models.Flat, error) {
 	switch role {
 	case models.Moderator:
 		return s.repo.GetFlats(ctx, id)

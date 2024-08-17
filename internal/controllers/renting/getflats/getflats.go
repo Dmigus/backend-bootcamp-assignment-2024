@@ -54,27 +54,7 @@ func (h *Handler) GetHouseId(w http.ResponseWriter, r *http.Request, id renting.
 
 func serializeFlats(flats []models.Flat) ([]byte, error) {
 	dtos := lo.Map(flats, func(flat models.Flat, _ int) renting.Flat {
-		return renting.Flat{
-			HouseId: flat.HouseId,
-			Id:      flat.Id,
-			Price:   flat.Price,
-			Rooms:   flat.Rooms,
-			Status:  statusModelToDto(flat.Status),
-		}
+		return renting.FlatModelToDto(&flat)
 	})
 	return json.Marshal(dtos)
-}
-
-func statusModelToDto(status models.FlatStatus) renting.Status {
-	switch status {
-	case models.Created:
-		return renting.Created
-	case models.OnModerate:
-		return renting.OnModeration
-	case models.Approved:
-		return renting.Approved
-	case models.Declined:
-		return renting.Declined
-	}
-	return ""
 }

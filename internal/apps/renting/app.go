@@ -7,6 +7,7 @@ import (
 	"backend-bootcamp-assignment-2024/internal/controllers/renting/createflat"
 	"backend-bootcamp-assignment-2024/internal/controllers/renting/getflats"
 	"backend-bootcamp-assignment-2024/internal/controllers/renting/housecreate"
+	"backend-bootcamp-assignment-2024/internal/controllers/renting/updateflat"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/flats"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/houses"
@@ -14,6 +15,7 @@ import (
 	createflat2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
 	getflats2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/getflats"
 	housecreate2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
+	updateflat2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/updateflat"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,12 +37,16 @@ var Module = fx.Module("renting",
 			fx.As(new(housecreate.HouseService)),
 		),
 		fx.Annotate(
-			getflats2.NewGetFlatsService,
+			getflats2.NewService,
 			fx.As(new(getflats.FlatsService)),
 		),
 		fx.Annotate(
 			createflat2.NewService,
 			fx.As(new(createflat.FlatsService)),
+		),
+		fx.Annotate(
+			updateflat2.NewService,
+			fx.As(new(updateflat.FlatService)),
 		),
 
 		// repo
@@ -53,10 +59,12 @@ var Module = fx.Module("renting",
 			flats.NewFlats,
 			fx.As(new(getflats2.Repository)),
 			fx.As(new(createflat2.FlatsRepo)),
+			fx.As(new(updateflat2.Repository)),
 		),
 		fx.Annotate(
 			postgres.NewTxManger,
 			fx.As(new(createflat2.TxManager)),
+			fx.As(new(updateflat2.TxManager)),
 		),
 		fx.Annotate(
 			createConnToPostgres,
@@ -77,7 +85,9 @@ var Module = fx.Module("renting",
 		getflats.NewHandler,
 		housecreate.NewHandler,
 		createflat.NewHandler,
+		updateflat.NewHandler,
 		generalMux,
+
 		httpServer,
 	),
 	fx.Invoke(func(*http.Server) {}),
@@ -113,13 +123,16 @@ type rentingHandlerParams struct {
 	GetFlatsHandler    *getflats.Handler
 	HouseCreateHandler *housecreate.Handler
 	CreateFlatHandler  *createflat.Handler
+	UpdateFlatHandler  *updateflat.Handler
 }
 
 func rentingHandler(handlers rentingHandlerParams) http.Handler {
 	serverHandler := rentingController.NewServerHandler(
 		handlers.HouseCreateHandler,
 		handlers.GetFlatsHandler,
-		handlers.CreateFlatHandler)
+		handlers.CreateFlatHandler,
+		handlers.UpdateFlatHandler,
+	)
 	return rentingController.Handler(serverHandler)
 }
 

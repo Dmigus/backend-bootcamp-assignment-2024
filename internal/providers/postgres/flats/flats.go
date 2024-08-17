@@ -6,6 +6,7 @@ import (
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
 	"context"
 	"errors"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/samber/lo"
 )
@@ -23,7 +24,7 @@ func (f *Flats) CreateFlat(ctx context.Context, req createflat.Request) (*models
 	params := createFlatParams{HouseID: int64(req.HouseId), Price: int32(req.Price), Rooms: int32(req.Rooms)}
 	flat, err := queries.createFlat(ctx, params)
 	if err != nil {
-		if isfFKViolation(err) {
+		if isFKViolation(err) {
 			return nil, models.ErrHouseNotFound
 		}
 		return nil, err
@@ -56,6 +57,33 @@ func (f *Flats) GetApprovedFlats(ctx context.Context, houseId int) ([]models.Fla
 	return flatsModel, nil
 }
 
+func (f *Flats) GetForUpdate(ctx context.Context, id int) (*models.Flat, error) {
+	queries := New(f.getDBTX(ctx))
+	flats, err := queries.getFlatForUpdate(ctx, int64(id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, models.ErrFlatNotFound
+		}
+		return nil, err
+	}
+	flatService := flatDtoToService(flats)
+	return &flatService, nil
+}
+
+func (f *Flats) UpdateStatus(ctx context.Context, id int, status models.FlatStatus) (*models.Flat, error) {
+	queries := New(f.getDBTX(ctx))
+	params := updateStatusParams{ID: int64(id), Status: status.String()}
+	updatedFlat, err := queries.updateStatus(ctx, params)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, models.ErrFlatNotFound
+		}
+		return nil, err
+	}
+	flatService := flatDtoToService(updatedFlat)
+	return &flatService, nil
+}
+
 func (f *Flats) getDBTX(ctx context.Context) DBTX {
 	tx := postgres.GetTxFromContext(ctx)
 	if tx == nil {
@@ -68,7 +96,7 @@ func (f *Flats) getDBTX(ctx context.Context) DBTX {
 	return f.defaultDBTX
 }
 
-func isfFKViolation(err error) bool {
+func isFKViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23503" {
 		return true

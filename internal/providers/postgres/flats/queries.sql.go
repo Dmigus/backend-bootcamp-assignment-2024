@@ -66,6 +66,25 @@ func (q *Queries) getApprovedFlats(ctx context.Context, houseID int64) ([]Flat, 
 	return items, nil
 }
 
+const getFlatForUpdate = `-- name: getFlatForUpdate :one
+SELECT id, house_id, price, rooms, status
+FROM flat
+WHERE id = $1 FOR UPDATE
+`
+
+func (q *Queries) getFlatForUpdate(ctx context.Context, id int64) (Flat, error) {
+	row := q.db.QueryRow(ctx, getFlatForUpdate, id)
+	var i Flat
+	err := row.Scan(
+		&i.ID,
+		&i.HouseID,
+		&i.Price,
+		&i.Rooms,
+		&i.Status,
+	)
+	return i, err
+}
+
 const getFlats = `-- name: getFlats :many
 SELECT id, house_id, price, rooms, status
 FROM flat
@@ -119,6 +138,31 @@ func (q *Queries) updateFlat(ctx context.Context, arg updateFlatParams) (Flat, e
 		arg.Rooms,
 		arg.Status,
 	)
+	var i Flat
+	err := row.Scan(
+		&i.ID,
+		&i.HouseID,
+		&i.Price,
+		&i.Rooms,
+		&i.Status,
+	)
+	return i, err
+}
+
+const updateStatus = `-- name: updateStatus :one
+UPDATE flat
+SET status = $2
+WHERE id = $1
+RETURNING id, house_id, price, rooms, status
+`
+
+type updateStatusParams struct {
+	ID     int64
+	Status string
+}
+
+func (q *Queries) updateStatus(ctx context.Context, arg updateStatusParams) (Flat, error) {
+	row := q.db.QueryRow(ctx, updateStatus, arg.ID, arg.Status)
 	var i Flat
 	err := row.Scan(
 		&i.ID,
