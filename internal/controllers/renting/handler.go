@@ -13,15 +13,18 @@ type (
 	getFlatsHandler interface {
 		GetHouseId(w http.ResponseWriter, r *http.Request, id HouseId)
 	}
+	createFlatHandler interface {
+		PostFlatCreate(w http.ResponseWriter, r *http.Request)
+	}
 	ServerHandler struct {
 		houseCreateHandler houseCreateHandler
 		getFlatsHandler    getFlatsHandler
+		createFlatHandler  createFlatHandler
 	}
 )
 
 func (s *ServerHandler) PostFlatCreate(w http.ResponseWriter, r *http.Request) {
-	//TODO implement me
-	panic("implement me")
+	s.createFlatHandler.PostFlatCreate(w, r)
 }
 
 func (s *ServerHandler) PostFlatUpdate(w http.ResponseWriter, r *http.Request) {
@@ -45,10 +48,12 @@ func (s *ServerHandler) PostHouseIdSubscribe(w http.ResponseWriter, r *http.Requ
 func NewServerHandler(
 	houseCreateHandler houseCreateHandler,
 	getFlatsHandler getFlatsHandler,
+	createFlatHandler createFlatHandler,
 ) *ServerHandler {
 	return &ServerHandler{
 		houseCreateHandler: houseCreateHandler,
 		getFlatsHandler:    getFlatsHandler,
+		createFlatHandler:  createFlatHandler,
 	}
 }
 

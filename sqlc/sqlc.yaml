@@ -1,10 +1,18 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "../internal/providers/postgres/renting/queries.sql"
+    queries: "../internal/providers/postgres/houses/queries.sql"
     schema: "../migrations"
     gen:
       go:
-        package: "renting"
+        package: "houses"
         sql_package: "pgx/v5"
-        out: "../internal/providers/postgres/renting"
+        out: "../internal/providers/postgres/houses"
+  - engine: "postgresql"
+    queries: "../internal/providers/postgres/flats/queries.sql"
+    schema: "../migrations"
+    gen:
+      go:
+        package: "flats"
+        sql_package: "pgx/v5"
+        out: "../internal/providers/postgres/flats"

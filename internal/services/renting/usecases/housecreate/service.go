@@ -11,7 +11,6 @@ type (
 		Year      int
 		Developer *string
 	}
-
 	Repository interface {
 		Create(context.Context, HouseCreateRequest) (*models.House, error)
 	}

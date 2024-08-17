@@ -4,10 +4,14 @@ import (
 	authController "backend-bootcamp-assignment-2024/internal/controllers/auth"
 	"backend-bootcamp-assignment-2024/internal/controllers/mw"
 	rentingController "backend-bootcamp-assignment-2024/internal/controllers/renting"
+	"backend-bootcamp-assignment-2024/internal/controllers/renting/createflat"
 	"backend-bootcamp-assignment-2024/internal/controllers/renting/getflats"
 	"backend-bootcamp-assignment-2024/internal/controllers/renting/housecreate"
-	"backend-bootcamp-assignment-2024/internal/providers/postgres/renting"
+	"backend-bootcamp-assignment-2024/internal/providers/postgres"
+	"backend-bootcamp-assignment-2024/internal/providers/postgres/flats"
+	"backend-bootcamp-assignment-2024/internal/providers/postgres/houses"
 	"backend-bootcamp-assignment-2024/internal/services/auth"
+	createflat2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
 	getflats2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/getflats"
 	housecreate2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
 	"context"
@@ -19,6 +23,7 @@ import (
 
 var Module = fx.Module("renting",
 	fx.Provide(
+		// services
 		fx.Annotate(
 			authService,
 			fx.As(new(authController.Service)),
@@ -34,14 +39,33 @@ var Module = fx.Module("renting",
 			fx.As(new(getflats.FlatsService)),
 		),
 		fx.Annotate(
-			renting.NewRenting,
+			createflat2.NewService,
+			fx.As(new(createflat.FlatsService)),
+		),
+
+		// repo
+		fx.Annotate(
+			houses.NewHouses,
 			fx.As(new(housecreate2.Repository)),
+			fx.As(new(createflat2.HousesRepo)),
+		),
+		fx.Annotate(
+			flats.NewFlats,
 			fx.As(new(getflats2.Repository)),
+			fx.As(new(createflat2.FlatsRepo)),
+		),
+		fx.Annotate(
+			postgres.NewTxManger,
+			fx.As(new(createflat2.TxManager)),
 		),
 		fx.Annotate(
 			createConnToPostgres,
-			fx.As(new(renting.DBTX)),
+			fx.As(new(houses.DBTX)),
+			fx.As(new(flats.DBTX)),
+			fx.As(new(postgres.TxBeginner)),
 		),
+
+		// controllers
 		fx.Annotate(
 			authHandler,
 			fx.ResultTags(`name:"authHandler"`),
@@ -52,6 +76,7 @@ var Module = fx.Module("renting",
 		),
 		getflats.NewHandler,
 		housecreate.NewHandler,
+		createflat.NewHandler,
 		generalMux,
 		httpServer,
 	),
@@ -87,10 +112,14 @@ type rentingHandlerParams struct {
 	fx.In
 	GetFlatsHandler    *getflats.Handler
 	HouseCreateHandler *housecreate.Handler
+	CreateFlatHandler  *createflat.Handler
 }
 
 func rentingHandler(handlers rentingHandlerParams) http.Handler {
-	serverHandler := rentingController.NewServerHandler(handlers.HouseCreateHandler, handlers.GetFlatsHandler)
+	serverHandler := rentingController.NewServerHandler(
+		handlers.HouseCreateHandler,
+		handlers.GetFlatsHandler,
+		handlers.CreateFlatHandler)
 	return rentingController.Handler(serverHandler)
 }
 

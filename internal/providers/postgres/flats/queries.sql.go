@@ -3,17 +3,15 @@
 //   sqlc v1.27.0
 // source: queries.sql
 
-package renting
+package flats
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createFlat = `-- name: createFlat :one
 INSERT INTO flat (house_id, price, rooms, status)
-VALUES ($1, $2, $3, 'created')
+VALUES ($1, $2, $3, 'Created')
 RETURNING id, house_id, price, rooms, status
 `
 
@@ -36,36 +34,10 @@ func (q *Queries) createFlat(ctx context.Context, arg createFlatParams) (Flat, e
 	return i, err
 }
 
-const createHouse = `-- name: createHouse :one
-INSERT INTO house (address, year, developer, created_at)
-VALUES ($1, $2, $3, clock_timestamp()::timestamp)
-RETURNING id, address, year, developer, created_at, update_at
-`
-
-type createHouseParams struct {
-	Address   string
-	Year      int32
-	Developer pgtype.Text
-}
-
-func (q *Queries) createHouse(ctx context.Context, arg createHouseParams) (House, error) {
-	row := q.db.QueryRow(ctx, createHouse, arg.Address, arg.Year, arg.Developer)
-	var i House
-	err := row.Scan(
-		&i.ID,
-		&i.Address,
-		&i.Year,
-		&i.Developer,
-		&i.CreatedAt,
-		&i.UpdateAt,
-	)
-	return i, err
-}
-
 const getApprovedFlats = `-- name: getApprovedFlats :many
 SELECT id, house_id, price, rooms, status
 FROM flat
-WHERE house_id = $1 AND status = 'approved'
+WHERE house_id = $1 AND status = 'Approved'
 `
 
 func (q *Queries) getApprovedFlats(ctx context.Context, houseID int64) ([]Flat, error) {
@@ -124,26 +96,6 @@ func (q *Queries) getFlats(ctx context.Context, houseID int64) ([]Flat, error) {
 		return nil, err
 	}
 	return items, nil
-}
-
-const getOrder = `-- name: getOrder :one
-SELECT id, address, year, developer, created_at, update_at
-FROM house
-WHERE id = $1
-`
-
-func (q *Queries) getOrder(ctx context.Context, id int64) (House, error) {
-	row := q.db.QueryRow(ctx, getOrder, id)
-	var i House
-	err := row.Scan(
-		&i.ID,
-		&i.Address,
-		&i.Year,
-		&i.Developer,
-		&i.CreatedAt,
-		&i.UpdateAt,
-	)
-	return i, err
 }
 
 const updateFlat = `-- name: updateFlat :one
