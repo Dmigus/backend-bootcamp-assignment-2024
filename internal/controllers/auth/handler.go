@@ -1,14 +1,14 @@
 package auth
 
 import (
-	"backend-bootcamp-assignment-2024/internal/services/auth"
+	"backend-bootcamp-assignment-2024/internal/models"
 	"encoding/json"
 	"net/http"
 )
 
 type (
 	Service interface {
-		DummyLogin(ut auth.UserType) (string, error)
+		DummyLogin(ut models.UserRole) (string, error)
 	}
 	ServerHandler struct {
 		service Service
@@ -20,12 +20,12 @@ func NewServerHandler(service Service) *ServerHandler {
 }
 
 func (s *ServerHandler) GetDummyLogin(w http.ResponseWriter, _ *http.Request, params GetDummyLoginParams) {
-	var userType auth.UserType
+	var userType models.UserRole
 	switch params.UserType {
 	case Client:
-		userType = auth.Client
+		userType = models.Client
 	case Moderator:
-		userType = auth.Moderator
+		userType = models.Moderator
 	default:
 		http.Error(w, "invalid user_type", http.StatusBadRequest)
 		return

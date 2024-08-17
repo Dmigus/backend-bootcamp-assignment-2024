@@ -1,10 +1,10 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "../internal/providers/postgres/houses/queries.sql"
+    queries: "../internal/providers/postgres/renting/queries.sql"
     schema: "../migrations"
     gen:
       go:
-        package: "houses"
+        package: "renting"
         sql_package: "pgx/v5"
-        out: "../internal/providers/postgres/houses"
+        out: "../internal/providers/postgres/renting"

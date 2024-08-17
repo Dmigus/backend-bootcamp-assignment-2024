@@ -3,6 +3,7 @@
 package auth
 
 import (
+	"backend-bootcamp-assignment-2024/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -13,7 +14,7 @@ func TestAuthService_DummyLogin_Positive(t *testing.T) {
 	a := &AuthService{
 		key: []byte("mykey"),
 	}
-	token, err := a.DummyLogin(Client)
+	token, err := a.DummyLogin(models.Client)
 	require.NoError(t, err)
 	// ожидаемый токен, полученный на сайте jwt.io
 	expectedToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiY2xpZW50In0.-pYcuqSQ9CPJcjKmy4E_fu7yugYXlaSxOQKBHZHsBdY"
@@ -25,7 +26,7 @@ func TestAuthService_DummyLogin_Errors(t *testing.T) {
 	a := &AuthService{
 		key: []byte("mykey"),
 	}
-	_, err := a.DummyLogin(UserType(0))
+	_, err := a.DummyLogin(models.UserRole(0))
 	require.ErrorIs(t, err, ErrNoSuchUserType)
 }
 
@@ -37,7 +38,7 @@ func TestAuthService_GetRole_Client(t *testing.T) {
 	clientToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiY2xpZW50In0.-pYcuqSQ9CPJcjKmy4E_fu7yugYXlaSxOQKBHZHsBdY"
 	role, err := a.GetRole(clientToken)
 	require.NoError(t, err)
-	assert.Equal(t, Client, role)
+	assert.Equal(t, models.Client, role)
 }
 
 func TestAuthService_GetRole_Moderator(t *testing.T) {
@@ -48,7 +49,7 @@ func TestAuthService_GetRole_Moderator(t *testing.T) {
 	moderatorToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoibW9kZXJhdG9yIn0.g2DHwsP5mL3Oxql152N0k8V-aZ2K9YqgO-gLTVKwyUg"
 	role, err := a.GetRole(moderatorToken)
 	require.NoError(t, err)
-	assert.Equal(t, Moderator, role)
+	assert.Equal(t, models.Moderator, role)
 }
 
 func TestAuthService_GetRole_Errors(t *testing.T) {

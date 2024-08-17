@@ -1,14 +1,14 @@
 package mw
 
 import (
-	"backend-bootcamp-assignment-2024/internal/services/auth"
+	"backend-bootcamp-assignment-2024/internal/models"
 	"net/http"
 	"strings"
 )
 
 type (
 	RoleRecognizer interface {
-		GetRole(tokenStr string) (auth.UserType, error)
+		GetRole(tokenStr string) (models.UserRole, error)
 	}
 	AuthenticatedMiddleware struct {
 		roleRecognizer RoleRecognizer
@@ -29,7 +29,7 @@ func NewAuthenticatedMiddleware(roleRecognizer RoleRecognizer, next http.Handler
 }
 
 func (mw *AuthenticatedMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	token, present := getTokenFromR(r)
+	token, present := GetTokenFromRequest(r)
 	if !present {
 		writeUnauthorized(w)
 		return
@@ -43,20 +43,20 @@ func (mw *AuthenticatedMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Requ
 }
 
 func (mw *ModeratorOnlyMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	token, present := getTokenFromR(r)
+	token, present := GetTokenFromRequest(r)
 	if !present {
 		writeUnauthorized(w)
 		return
 	}
 	role, err := mw.roleRecognizer.GetRole(token)
-	if err == nil && role == auth.Moderator {
+	if err == nil && role == models.Moderator {
 		mw.next.ServeHTTP(w, r)
 	} else {
 		writeUnauthorized(w)
 	}
 }
 
-func getTokenFromR(r *http.Request) (string, bool) {
+func GetTokenFromRequest(r *http.Request) (string, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return "", false

@@ -8,6 +8,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Flat struct {
+	ID      int64
+	HouseID int64
+	Price   int32
+	Rooms   int32
+	Status  string
+}
+
 type House struct {
 	ID        int64
 	Address   string

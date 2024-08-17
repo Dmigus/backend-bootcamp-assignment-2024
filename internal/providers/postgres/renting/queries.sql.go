@@ -11,6 +11,31 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createFlat = `-- name: createFlat :one
+INSERT INTO flat (house_id, price, rooms, status)
+VALUES ($1, $2, $3, 'created')
+RETURNING id, house_id, price, rooms, status
+`
+
+type createFlatParams struct {
+	HouseID int64
+	Price   int32
+	Rooms   int32
+}
+
+func (q *Queries) createFlat(ctx context.Context, arg createFlatParams) (Flat, error) {
+	row := q.db.QueryRow(ctx, createFlat, arg.HouseID, arg.Price, arg.Rooms)
+	var i Flat
+	err := row.Scan(
+		&i.ID,
+		&i.HouseID,
+		&i.Price,
+		&i.Rooms,
+		&i.Status,
+	)
+	return i, err
+}
+
 const createHouse = `-- name: createHouse :one
 INSERT INTO house (address, year, developer, created_at)
 VALUES ($1, $2, $3, clock_timestamp()::timestamp)
@@ -37,6 +62,70 @@ func (q *Queries) createHouse(ctx context.Context, arg createHouseParams) (House
 	return i, err
 }
 
+const getApprovedFlats = `-- name: getApprovedFlats :many
+SELECT id, house_id, price, rooms, status
+FROM flat
+WHERE house_id = $1 AND status = 'approved'
+`
+
+func (q *Queries) getApprovedFlats(ctx context.Context, houseID int64) ([]Flat, error) {
+	rows, err := q.db.Query(ctx, getApprovedFlats, houseID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Flat
+	for rows.Next() {
+		var i Flat
+		if err := rows.Scan(
+			&i.ID,
+			&i.HouseID,
+			&i.Price,
+			&i.Rooms,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFlats = `-- name: getFlats :many
+SELECT id, house_id, price, rooms, status
+FROM flat
+WHERE house_id = $1
+`
+
+func (q *Queries) getFlats(ctx context.Context, houseID int64) ([]Flat, error) {
+	rows, err := q.db.Query(ctx, getFlats, houseID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Flat
+	for rows.Next() {
+		var i Flat
+		if err := rows.Scan(
+			&i.ID,
+			&i.HouseID,
+			&i.Price,
+			&i.Rooms,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOrder = `-- name: getOrder :one
 SELECT id, address, year, developer, created_at, update_at
 FROM house
@@ -53,6 +142,38 @@ func (q *Queries) getOrder(ctx context.Context, id int64) (House, error) {
 		&i.Developer,
 		&i.CreatedAt,
 		&i.UpdateAt,
+	)
+	return i, err
+}
+
+const updateFlat = `-- name: updateFlat :one
+UPDATE flat
+SET price = $2, rooms= $3, status = $4
+WHERE id = $1
+RETURNING id, house_id, price, rooms, status
+`
+
+type updateFlatParams struct {
+	ID     int64
+	Price  int32
+	Rooms  int32
+	Status string
+}
+
+func (q *Queries) updateFlat(ctx context.Context, arg updateFlatParams) (Flat, error) {
+	row := q.db.QueryRow(ctx, updateFlat,
+		arg.ID,
+		arg.Price,
+		arg.Rooms,
+		arg.Status,
+	)
+	var i Flat
+	err := row.Scan(
+		&i.ID,
+		&i.HouseID,
+		&i.Price,
+		&i.Rooms,
+		&i.Status,
 	)
 	return i, err
 }

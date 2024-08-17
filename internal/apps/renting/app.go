@@ -23,6 +23,7 @@ var Module = fx.Module("renting",
 			authService,
 			fx.As(new(authController.Service)),
 			fx.As(new(mw.RoleRecognizer)),
+			fx.As(new(getflats.RoleRecognizer)),
 		),
 		fx.Annotate(
 			housecreate2.NewHouseService,
@@ -105,8 +106,13 @@ func generalMux(params generalMuxParams) http.Handler {
 	mux.Handle("GET /dummyLogin", params.AuthHandler)
 	mux.Handle("POST /login", params.AuthHandler)
 	mux.Handle("POST /register", params.AuthHandler)
-	mux.Handle("POST /house/create", mw.NewModeratorOnlyMiddleware(params.RoleRecognizer, params.RentingHandler))
-	mux.Handle("GET /house/{id}", mw.NewAuthenticatedMiddleware(params.RoleRecognizer, params.RentingHandler))
+	rentingModeratorOnly := mw.NewModeratorOnlyMiddleware(params.RoleRecognizer, params.RentingHandler)
+	rentingAuthenticated := mw.NewAuthenticatedMiddleware(params.RoleRecognizer, params.RentingHandler)
+	mux.Handle("POST /house/create", rentingModeratorOnly)
+	mux.Handle("GET /house/{id}", rentingAuthenticated)
+	mux.Handle("POST /flat/create", rentingAuthenticated)
+	mux.Handle("POST /flat/update", rentingModeratorOnly)
+	mux.Handle("POST /house/{id}/subscribe", rentingAuthenticated)
 	return mw.Recovery(mux)
 }
 
