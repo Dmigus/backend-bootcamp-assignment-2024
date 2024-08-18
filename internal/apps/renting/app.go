@@ -6,18 +6,18 @@ import (
 	authController "backend-bootcamp-assignment-2024/internal/controllers/auth"
 	"backend-bootcamp-assignment-2024/internal/controllers/mw"
 	rentingController "backend-bootcamp-assignment-2024/internal/controllers/renting"
-	"backend-bootcamp-assignment-2024/internal/controllers/renting/createflat"
-	"backend-bootcamp-assignment-2024/internal/controllers/renting/getflats"
-	"backend-bootcamp-assignment-2024/internal/controllers/renting/housecreate"
-	"backend-bootcamp-assignment-2024/internal/controllers/renting/updateflat"
+	createflatHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/createflat"
+	getflatsHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/getflats"
+	housecreateHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/housecreate"
+	updateflatHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/updateflat"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/flats"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/houses"
 	"backend-bootcamp-assignment-2024/internal/services/auth"
-	createflat2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
-	getflats2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/getflats"
-	housecreate2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
-	updateflat2 "backend-bootcamp-assignment-2024/internal/services/renting/usecases/updateflat"
+	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
+	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/getflats"
+	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
+	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/updateflat"
 	"context"
 	"fmt"
 	"net/http"
@@ -27,77 +27,79 @@ import (
 	"go.uber.org/fx"
 )
 
-var Module = fx.Module("renting",
-	fx.Provide(
-		// services
-		fx.Annotate(
-			authService,
-			fx.As(new(authController.Service)),
-			fx.As(new(mw.RoleRecognizer)),
-			fx.As(new(getflats.RoleRecognizer)),
-		),
-		fx.Annotate(
-			housecreate2.NewHouseService,
-			fx.As(new(housecreate.HouseService)),
-		),
-		fx.Annotate(
-			getflats2.NewService,
-			fx.As(new(getflats.FlatsService)),
-		),
-		fx.Annotate(
-			createflat2.NewService,
-			fx.As(new(createflat.FlatsService)),
-		),
-		fx.Annotate(
-			updateflat2.NewService,
-			fx.As(new(updateflat.FlatService)),
-		),
-
-		// repo
-		fx.Annotate(
-			houses.NewHouses,
-			fx.As(new(housecreate2.Repository)),
-			fx.As(new(createflat2.HousesRepo)),
-		),
-		fx.Annotate(
-			flats.NewFlats,
-			fx.As(new(getflats2.Repository)),
-			fx.As(new(createflat2.FlatsRepo)),
-			fx.As(new(updateflat2.Repository)),
-		),
-		fx.Annotate(
-			postgres.NewTxManger,
-			fx.As(new(createflat2.TxManager)),
-			fx.As(new(updateflat2.TxManager)),
-		),
-		fx.Annotate(
-			createConnToPostgres,
-			fx.As(new(houses.DBTX)),
-			fx.As(new(flats.DBTX)),
-			fx.As(new(postgres.TxBeginner)),
-		),
-
-		// controllers
-		fx.Annotate(
-			authHandler,
-			fx.ResultTags(`name:"authHandler"`),
-		),
-		fx.Annotate(
-			rentingHandler,
-			fx.ResultTags(`name:"rentingHandler"`),
-		),
-		getflats.NewHandler,
-		housecreate.NewHandler,
-		createflat.NewHandler,
-		updateflat.NewHandler,
-		generalMux,
-
-		httpServer,
+var Dependencies = fx.Provide(
+	// services
+	fx.Annotate(
+		authService,
+		fx.As(new(authController.Service)),
+		fx.As(new(mw.RoleRecognizer)),
+		fx.As(new(getflatsHandler.RoleRecognizer)),
 	),
+	fx.Annotate(
+		housecreate.NewHouseService,
+		fx.As(new(housecreateHandler.HouseService)),
+	),
+	fx.Annotate(
+		getflats.NewService,
+		fx.As(new(getflatsHandler.FlatsService)),
+	),
+	fx.Annotate(
+		createflat.NewService,
+		fx.As(new(createflatHandler.FlatsService)),
+	),
+	fx.Annotate(
+		updateflat.NewService,
+		fx.As(new(updateflatHandler.FlatService)),
+	),
+
+	// repo
+	fx.Annotate(
+		houses.NewHouses,
+		fx.As(new(housecreate.Repository)),
+		fx.As(new(createflat.HousesRepo)),
+	),
+	fx.Annotate(
+		flats.NewFlats,
+		fx.As(new(getflats.Repository)),
+		fx.As(new(createflat.FlatsRepo)),
+		fx.As(new(updateflat.Repository)),
+	),
+	fx.Annotate(
+		postgres.NewTxManger,
+		fx.As(new(createflat.TxManager)),
+		fx.As(new(updateflat.TxManager)),
+	),
+	fx.Annotate(
+		CreateConnToPostgres,
+		fx.As(new(houses.DBTX)),
+		fx.As(new(flats.DBTX)),
+		fx.As(new(postgres.TxBeginner)),
+	),
+
+	// controllers
+	fx.Annotate(
+		authHandler,
+		fx.ResultTags(`name:"authHandler"`),
+	),
+	fx.Annotate(
+		rentingHandler,
+		fx.ResultTags(`name:"rentingHandler"`),
+	),
+	getflatsHandler.NewHandler,
+	housecreateHandler.NewHandler,
+	createflatHandler.NewHandler,
+	updateflatHandler.NewHandler,
+	generalMux,
+
+	httpServer,
+)
+
+var Module = fx.Module("renting",
+	Dependencies,
 	fx.Invoke(func(*http.Server) {}),
 )
 
-func createConnToPostgres(config *Config) (*pgxpool.Pool, error) {
+func CreateConnToPostgres(config *Config) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(config.PostgresDSN)
 	if err != nil {
 		return nil, err
@@ -124,10 +126,10 @@ func authHandler(service authController.Service) http.Handler {
 
 type rentingHandlerParams struct {
 	fx.In
-	GetFlatsHandler    *getflats.Handler
-	HouseCreateHandler *housecreate.Handler
-	CreateFlatHandler  *createflat.Handler
-	UpdateFlatHandler  *updateflat.Handler
+	GetFlatsHandler    *getflatsHandler.Handler
+	HouseCreateHandler *housecreateHandler.Handler
+	CreateFlatHandler  *createflatHandler.Handler
+	UpdateFlatHandler  *updateflatHandler.Handler
 }
 
 func rentingHandler(handlers rentingHandlerParams) http.Handler {
