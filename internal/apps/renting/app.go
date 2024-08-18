@@ -10,10 +10,11 @@ import (
 	getflatsHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/getflats"
 	housecreateHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/housecreate"
 	updateflatHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/updateflat"
+	"backend-bootcamp-assignment-2024/internal/providers/jwt"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/flats"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/houses"
-	"backend-bootcamp-assignment-2024/internal/services/auth"
+	"backend-bootcamp-assignment-2024/internal/services/auth/usecases/login"
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/getflats"
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
@@ -30,7 +31,7 @@ import (
 var Dependencies = fx.Provide(
 	// services
 	fx.Annotate(
-		authService,
+		login.NewAuthService,
 		fx.As(new(authController.Service)),
 		fx.As(new(mw.RoleRecognizer)),
 		fx.As(new(getflatsHandler.RoleRecognizer)),
@@ -76,6 +77,12 @@ var Dependencies = fx.Provide(
 		fx.As(new(postgres.TxBeginner)),
 	),
 
+	//jwt
+	fx.Annotate(
+		jwtCodec,
+		fx.As(new(login.JWTCodec)),
+	),
+
 	// controllers
 	fx.Annotate(
 		authHandler,
@@ -114,9 +121,9 @@ func CreateConnToPostgres(config *Config) (*pgxpool.Pool, error) {
 	return conn, nil
 }
 
-func authService(config *Config) *auth.AuthService {
+func jwtCodec(config *Config) *jwt.Codec {
 	key := []byte(config.CipherKey)
-	return auth.NewAuthService(key)
+	return jwt.NewCodec(key)
 }
 
 func authHandler(service authController.Service) http.Handler {

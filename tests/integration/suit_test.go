@@ -133,6 +133,8 @@ func (s *Suite) TestGetFlats() {
 			s.Assert().Len(returnedForClient, 1)
 			s.Assert().Len(returnedForModerator, 2)
 			s.Assert().Equal(models.Approved, returnedForClient[0].Status)
+			s.Assert().Equal(300, returnedForClient[0].Price)
+			s.Assert().Equal(4, returnedForClient[0].Rooms)
 		}),
 	)
 	appWithTest.RequireStart().RequireStop()

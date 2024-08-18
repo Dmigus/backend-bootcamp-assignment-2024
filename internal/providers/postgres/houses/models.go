@@ -24,3 +24,11 @@ type House struct {
 	CreatedAt pgtype.Timestamp
 	UpdateAt  pgtype.Timestamp
 }
+
+type User struct {
+	ID           pgtype.UUID
+	Email        string
+	Salt         string
+	PasswordHash string
+	Role         string
+}

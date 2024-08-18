@@ -9,6 +9,8 @@ import (
 type (
 	Service interface {
 		DummyLogin(ut models.UserRole) (string, error)
+		Login(userId, password string) (string, error)
+		Register(email, password string, role models.UserRole) (string, error)
 	}
 	ServerHandler struct {
 		service Service

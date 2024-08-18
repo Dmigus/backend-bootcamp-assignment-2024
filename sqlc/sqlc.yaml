@@ -16,3 +16,11 @@ sql:
         package: "flats"
         sql_package: "pgx/v5"
         out: "../internal/providers/postgres/flats"
+  - engine: "postgresql"
+    queries: "../internal/providers/postgres/users/queries.sql"
+    schema: "../migrations"
+    gen:
+      go:
+        package: "users"
+        sql_package: "pgx/v5"
+        out: "../internal/providers/postgres/users"
