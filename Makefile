@@ -12,6 +12,13 @@ run-all: run-storage
 stop-all:
 	docker-compose down
 
+
+.PHONY: coverage
+coverage:
+	@go test -tags=unit,integration -coverprofile=coverage.out -parallel=10 ./...
+	@go tool cover -html coverage.out -o coverage.html
+	@rm coverage.out
+
 # Используем bin в текущей директории для установки плагина генерации и миграции
 LOCAL_BIN:=$(CURDIR)/bin
 
