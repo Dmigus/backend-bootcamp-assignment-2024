@@ -19,7 +19,7 @@ WHERE id = $1
 
 type getAuthDataRow struct {
 	Salt         []byte
-	PasswordHash string
+	PasswordHash []byte
 	Role         string
 }
 
@@ -39,7 +39,7 @@ type registerParams struct {
 	ID           pgtype.UUID
 	Email        string
 	Salt         []byte
-	PasswordHash string
+	PasswordHash []byte
 	Role         string
 }
 

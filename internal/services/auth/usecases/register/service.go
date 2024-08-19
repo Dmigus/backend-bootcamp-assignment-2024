@@ -13,7 +13,7 @@ type (
 		Id             models.UserId
 		Email          string
 		Salt           []byte
-		HashedPassword string
+		HashedPassword []byte
 		Role           models.UserRole
 	}
 	Repository interface {
@@ -26,7 +26,7 @@ type (
 		NewUserId() models.UserId
 	}
 	PasswordHasher interface {
-		Hash(salt []byte, password string) (string, error)
+		Hash(salt []byte, password string) ([]byte, error)
 	}
 	Service struct {
 		saltGenerator   SaltGenerator

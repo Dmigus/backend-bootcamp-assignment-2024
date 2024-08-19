@@ -8,13 +8,14 @@ func NewBCryptHasher() *BCryptHasher {
 	return &BCryptHasher{}
 }
 
-func (p *BCryptHasher) Hash(salt []byte, password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword(p.saltWithPassword(salt, password), bcrypt.DefaultCost)
-	return string(bytes), err
+func (p *BCryptHasher) Hash(salt []byte, password string) ([]byte, error) {
+	salted := p.saltWithPassword(salt, password)
+	return bcrypt.GenerateFromPassword(salted, bcrypt.DefaultCost)
 }
 
-func (p *BCryptHasher) CheckPasswordHash(salt []byte, password string, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), p.saltWithPassword(salt, password))
+func (p *BCryptHasher) CheckPasswordHash(salt []byte, password string, hash []byte) bool {
+	salted := p.saltWithPassword(salt, password)
+	err := bcrypt.CompareHashAndPassword(hash, salted)
 	return err == nil
 }
 

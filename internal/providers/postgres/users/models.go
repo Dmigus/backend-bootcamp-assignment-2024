@@ -29,6 +29,6 @@ type User struct {
 	ID           pgtype.UUID
 	Email        string
 	Salt         []byte
-	PasswordHash string
+	PasswordHash []byte
 	Role         string
 }

@@ -20,14 +20,14 @@ type (
 	}
 	AuthData struct {
 		Salt []byte
-		Hash string
+		Hash []byte
 		Role models.UserRole
 	}
 	Repository interface {
 		GetAuthData(ctx context.Context, userId models.UserId) (*AuthData, error)
 	}
 	PasswordHasher interface {
-		CheckPasswordHash(salt []byte, password, hash string) bool
+		CheckPasswordHash(salt []byte, password string, hash []byte) bool
 	}
 	Service struct {
 		codec          JWTCodec

@@ -79,7 +79,7 @@ func (s *ServerHandler) PostLogin(w http.ResponseWriter, r *http.Request) {
 	token, err := s.loginService.Login(r.Context(), userId, *req.Password)
 	if err != nil {
 		if errors.Is(err, login.ErrInvalidCredentials) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
 		write5xxResponse(w, err.Error())
