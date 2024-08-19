@@ -3,6 +3,7 @@ package jwt
 import (
 	"backend-bootcamp-assignment-2024/internal/models"
 	"backend-bootcamp-assignment-2024/internal/services/auth/usecases/login"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 

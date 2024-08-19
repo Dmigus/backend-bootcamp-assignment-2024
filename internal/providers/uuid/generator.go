@@ -2,6 +2,7 @@ package uuid
 
 import (
 	"backend-bootcamp-assignment-2024/internal/models"
+
 	uuidGoogle "github.com/google/uuid"
 )
 

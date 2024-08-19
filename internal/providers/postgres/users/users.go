@@ -6,6 +6,7 @@ import (
 	registerUsecase "backend-bootcamp-assignment-2024/internal/services/auth/usecases/register"
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
