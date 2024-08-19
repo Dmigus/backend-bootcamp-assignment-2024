@@ -7,6 +7,7 @@ run-storage: bin/goose
 
 .PHONY: run-all
 run-all: run-storage
+	docker-compose build -q
 	docker-compose up -d --wait renting
 
 stop-all:
