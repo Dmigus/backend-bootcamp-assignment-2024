@@ -28,7 +28,7 @@ type House struct {
 type User struct {
 	ID           pgtype.UUID
 	Email        string
-	Salt         string
+	Salt         []byte
 	PasswordHash string
 	Role         string
 }

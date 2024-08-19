@@ -12,7 +12,7 @@ type (
 	Request struct {
 		Id             models.UserId
 		Email          string
-		Salt           string
+		Salt           []byte
 		HashedPassword string
 		Role           models.UserRole
 	}
@@ -20,13 +20,13 @@ type (
 		Add(ctx context.Context, req Request) error
 	}
 	SaltGenerator interface {
-		NewSalt() string
+		NewSalt() []byte
 	}
 	UserIdGenerator interface {
 		NewUserId() models.UserId
 	}
 	PasswordHasher interface {
-		Hash(password string, salt string) (string, error)
+		Hash(salt []byte, password string) (string, error)
 	}
 	Service struct {
 		saltGenerator   SaltGenerator
@@ -36,15 +36,19 @@ type (
 	}
 )
 
+func NewService(saltGenerator SaltGenerator, repo Repository, userIdGenerator UserIdGenerator, passwordHasher PasswordHasher) *Service {
+	return &Service{saltGenerator: saltGenerator, repo: repo, userIdGenerator: userIdGenerator, passwordHasher: passwordHasher}
+}
+
 func (s *Service) Register(ctx context.Context, email, password string, role models.UserRole) (*models.UserId, error) {
 	salt := s.saltGenerator.NewSalt()
-	hashedPassword, err := s.passwordHasher.Hash(password, salt)
+	hashedPassword, err := s.passwordHasher.Hash(salt, password)
 	if err != nil {
 		return nil, err
 	}
 	uuid := s.userIdGenerator.NewUserId()
 	req := Request{
-		Id:             s.userIdGenerator.NewUserId(),
+		Id:             uuid,
 		Email:          email,
 		Salt:           salt,
 		HashedPassword: hashedPassword,

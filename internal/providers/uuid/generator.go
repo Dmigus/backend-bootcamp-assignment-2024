@@ -7,15 +7,14 @@ import (
 
 type Generator struct{}
 
+func NewGenerator() *Generator {
+	return &Generator{}
+}
+
 func (g *Generator) NewUserId() models.UserId {
 	uuidG, _ := uuidGoogle.NewRandom()
 	bytes, _ := uuidG.MarshalBinary()
 	var uuid models.UserId
 	copy(uuid[:], bytes)
 	return uuid
-}
-
-func UserIdToString(uuid models.UserId) string {
-	uuidG, _ := uuidGoogle.FromBytes(uuid[:])
-	return uuidG.String()
 }

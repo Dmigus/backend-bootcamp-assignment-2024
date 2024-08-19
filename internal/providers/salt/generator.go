@@ -6,8 +6,12 @@ const saltSize = 16
 
 type Generator struct{}
 
-func (g *Generator) NewSalt() string {
+func NewGenerator() *Generator {
+	return &Generator{}
+}
+
+func (g *Generator) NewSalt() []byte {
 	var salt = make([]byte, saltSize)
 	_, _ = rand.Read(salt[:])
-	return string(salt)
+	return salt
 }

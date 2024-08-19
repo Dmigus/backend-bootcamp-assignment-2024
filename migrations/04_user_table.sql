@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS "user"
 (
     id uuid PRIMARY KEY,
     email VARCHAR NOT NULL,
-    salt char(16) NOT NULL,
+    salt bytea NOT NULL,
     password_hash VARCHAR NOT NULL,
     role VARCHAR NOT NULL
 );

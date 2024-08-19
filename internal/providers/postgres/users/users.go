@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -26,7 +27,14 @@ func (u *Users) Add(ctx context.Context, req registerUsecase.Request) error {
 		PasswordHash: req.HashedPassword,
 		Role:         req.Role.String(),
 	}
-	return u.queries.register(ctx, params)
+	err := u.queries.register(ctx, params)
+	if err != nil {
+		if isDuplicateViolation(err) {
+			return registerUsecase.ErrUserAlreadyExists
+		}
+		return err
+	}
+	return nil
 }
 
 func (u *Users) GetAuthData(ctx context.Context, userId models.UserId) (*login.AuthData, error) {
@@ -59,4 +67,12 @@ func convertRole(roleStr string) (models.UserRole, error) {
 	default:
 		return models.UserRole(0), models.ErrUnknownRole
 	}
+}
+
+func isDuplicateViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return true
+	}
+	return false
 }

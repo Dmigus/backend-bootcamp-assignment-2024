@@ -19,7 +19,7 @@ type (
 		Decode(token string) (*models.AuthClaims, error)
 	}
 	AuthData struct {
-		Salt string
+		Salt []byte
 		Hash string
 		Role models.UserRole
 	}
@@ -27,16 +27,20 @@ type (
 		GetAuthData(ctx context.Context, userId models.UserId) (*AuthData, error)
 	}
 	PasswordHasher interface {
-		CheckPasswordHash(salt, password, hash string) bool
+		CheckPasswordHash(salt []byte, password, hash string) bool
 	}
-	AuthService struct {
+	Service struct {
 		codec          JWTCodec
 		repo           Repository
 		passwordHasher PasswordHasher
 	}
 )
 
-func (a *AuthService) Login(ctx context.Context, userId models.UserId, password string) (string, error) {
+func NewService(codec JWTCodec, repo Repository, passwordHasher PasswordHasher) *Service {
+	return &Service{codec: codec, repo: repo, passwordHasher: passwordHasher}
+}
+
+func (a *Service) Login(ctx context.Context, userId models.UserId, password string) (string, error) {
 	authData, err := a.repo.GetAuthData(ctx, userId)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) {
@@ -51,17 +55,13 @@ func (a *AuthService) Login(ctx context.Context, userId models.UserId, password 
 	return "", ErrInvalidCredentials
 }
 
-func NewAuthService(codec JWTCodec) *AuthService {
-	return &AuthService{codec: codec}
-}
-
-func (a *AuthService) DummyLogin(ut models.UserRole) (string, error) {
+func (a *Service) DummyLogin(ut models.UserRole) (string, error) {
 	claims := models.AuthClaims{Role: ut}
 	return a.codec.Encode(claims)
 }
 
 // GetRole проверяет токен и возвращает роль пользователя, если токен валидный. Если токен невалидный, то ErrInvalidToken
-func (a *AuthService) GetRole(tokenStr string) (models.UserRole, error) {
+func (a *Service) GetRole(tokenStr string) (models.UserRole, error) {
 	claims, err := a.codec.Decode(tokenStr)
 	if err != nil {
 		return models.UserRole(0), err

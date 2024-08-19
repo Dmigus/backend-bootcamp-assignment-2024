@@ -28,6 +28,7 @@ func (h *Handler) PostFlatCreate(w http.ResponseWriter, r *http.Request) {
 	err := renting.ReadJsonBody(r, &req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	if req.Rooms == nil {
 		http.Error(w, "rooms is required", http.StatusBadRequest)

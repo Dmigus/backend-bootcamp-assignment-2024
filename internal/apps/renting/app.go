@@ -10,11 +10,16 @@ import (
 	getflatsHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/getflats"
 	housecreateHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/housecreate"
 	updateflatHandler "backend-bootcamp-assignment-2024/internal/controllers/renting/updateflat"
+	"backend-bootcamp-assignment-2024/internal/providers/hash"
 	"backend-bootcamp-assignment-2024/internal/providers/jwt"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/flats"
 	"backend-bootcamp-assignment-2024/internal/providers/postgres/houses"
+	"backend-bootcamp-assignment-2024/internal/providers/postgres/users"
+	"backend-bootcamp-assignment-2024/internal/providers/salt"
+	"backend-bootcamp-assignment-2024/internal/providers/uuid"
 	"backend-bootcamp-assignment-2024/internal/services/auth/usecases/login"
+	"backend-bootcamp-assignment-2024/internal/services/auth/usecases/register"
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/createflat"
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/getflats"
 	"backend-bootcamp-assignment-2024/internal/services/renting/usecases/housecreate"
@@ -31,10 +36,14 @@ import (
 var Dependencies = fx.Provide(
 	// services
 	fx.Annotate(
-		login.NewAuthService,
-		fx.As(new(authController.Service)),
+		login.NewService,
+		fx.As(new(authController.LoginService)),
 		fx.As(new(mw.RoleRecognizer)),
 		fx.As(new(getflatsHandler.RoleRecognizer)),
+	),
+	fx.Annotate(
+		register.NewService,
+		fx.As(new(authController.RegisterService)),
 	),
 	fx.Annotate(
 		housecreate.NewHouseService,
@@ -75,12 +84,31 @@ var Dependencies = fx.Provide(
 		fx.As(new(houses.DBTX)),
 		fx.As(new(flats.DBTX)),
 		fx.As(new(postgres.TxBeginner)),
+		fx.As(new(users.DBTX)),
+	),
+	fx.Annotate(
+		users.NewUsers,
+		fx.As(new(login.Repository)),
+		fx.As(new(register.Repository)),
 	),
 
-	//jwt
+	//auth
 	fx.Annotate(
 		jwtCodec,
 		fx.As(new(login.JWTCodec)),
+	),
+	fx.Annotate(
+		hash.NewBCryptHasher,
+		fx.As(new(login.PasswordHasher)),
+		fx.As(new(register.PasswordHasher)),
+	),
+	fx.Annotate(
+		salt.NewGenerator,
+		fx.As(new(register.SaltGenerator)),
+	),
+	fx.Annotate(
+		uuid.NewGenerator,
+		fx.As(new(register.UserIdGenerator)),
 	),
 
 	// controllers
@@ -126,8 +154,8 @@ func jwtCodec(config *Config) *jwt.Codec {
 	return jwt.NewCodec(key)
 }
 
-func authHandler(service authController.Service) http.Handler {
-	serverHandler := authController.NewServerHandler(service)
+func authHandler(loginService authController.LoginService, registerService authController.RegisterService) http.Handler {
+	serverHandler := authController.NewServerHandler(loginService, registerService)
 	return authController.Handler(serverHandler)
 }
 
