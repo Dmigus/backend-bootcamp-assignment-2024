@@ -27,7 +27,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/fx"
@@ -201,9 +200,8 @@ func generalMux(params generalMuxParams) http.Handler {
 
 func httpServer(lc fx.Lifecycle, config *Config, handler http.Handler) *http.Server {
 	server := &http.Server{
-		Addr:              fmt.Sprintf(":%d", config.HTTPPort),
-		Handler:           handler,
-		ReadHeaderTimeout: 10 * time.Second, // Установим
+		Addr:    fmt.Sprintf(":%d", config.HTTPPort),
+		Handler: handler,
 	}
 	lc.Append(fx.StartStopHook(
 		func() {
